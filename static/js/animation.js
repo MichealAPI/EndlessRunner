@@ -42,6 +42,5 @@ class Animation {
         clearInterval(this.animationInterval);
         this.animationInterval = null; // Reset the interval reference
         player.isAnimationRunning = false;
-        console.log("Stopping animation");
     }
 }

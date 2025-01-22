@@ -8,7 +8,7 @@ class Player {
     x
     y
     horizontalSpeed = 5 // in pixels
-    verticalSpeed = 5 // in pixels
+    //verticalSpeed = 5 // in pixels
     maxJumpHeight = 250 // in pixels
 
     env
@@ -23,6 +23,7 @@ class Player {
     steps = 0
 
     playerData
+    moved = false
 
     init(env) {
 
@@ -39,6 +40,11 @@ class Player {
         this.resetPlayerData()
         this.y = height - this.env.platformHeight - this.playerData.height;
 
+    }
+
+    setOnPlatform() {
+        this.x = 0;
+        this.y = height - this.env.platformHeight - this.playerData.height;
     }
 
     static preload() {
@@ -171,6 +177,8 @@ class Player {
     handleKeyDown(event) {
         const action = this.keyMap.get(event.code);
         if (action) {
+            this.moved = true;
+
             this[action] = true;
             if (action === 'jump' && !this.isJumping) this.moveJump();
         }

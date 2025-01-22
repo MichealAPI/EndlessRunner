@@ -64,7 +64,6 @@ class ObstaclePile {
         for (let obstacle of this.obstacles) {
 
             if (obstacle.isOutside()) {
-                console.log("b")
                 this.obstacles.splice(this.obstacles.indexOf(obstacle), 1);
 
                 points += 1;
@@ -81,8 +80,6 @@ class ObstaclePile {
 
             obstacle.move()
 
-            console.log("c")
-
             //obstacle.move();
             obstacle.draw();
 
@@ -97,8 +94,6 @@ class ObstaclePile {
     createObstacle(speed) {
 
         let y = this.obstacles.length * Obstacle.OBSTACLE_SIZE;
-
-        console.log(y)
 
         let x = Obstacle.OBSTACLE_SIZE;
 
