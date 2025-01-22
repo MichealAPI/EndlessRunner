@@ -30,13 +30,13 @@ function drawPiles() {
     }
 }
 
-function generatePiles(rate, speed, min = 1, max = 3) {
+function generatePiles(rate, baseSpeed, min = 1, max = 3) {
     return setInterval(() => {
         let amount = getRandomInt(min, max);
         let pile = new ObstaclePile();
-        pile.generate(amount, speed);
+        pile.generate(amount, baseSpeed + points * 0.1);
         obstaclePiles.push(pile);
-    }, rate);
+    }, rate - (points * 1.5));
 }
 
 function destroyPiles() {
