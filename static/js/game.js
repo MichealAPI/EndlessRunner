@@ -45,6 +45,8 @@ function destroyPiles() {
 
 function lose() {
     destroyPiles()
+
+    points = 0;
 }
 
 function gamePreload() {

@@ -133,30 +133,32 @@ class Player {
         this.isJumping = true;
 
         const jumpAnimation = Player.ANIMATIONS.get('jump');
-        let jumpedHeight = 0;
+        const jumpDuration = 800; // Total jump duration in ms
+        const frameDuration = 20; // Frame duration in ms
+        const peakHeight = this.maxJumpHeight;
+        const groundLevel = height - this.env.platformHeight - this.playerData.height;
 
-        // Start jump animation and jumping phase
-        jumpAnimation.drawAnimation(this, 20, false); // Forward animation for jump
-        while (jumpedHeight < this.maxJumpHeight) {
-            this.y -= this.verticalSpeed * 0.8;
-            jumpedHeight += this.verticalSpeed * 0.8;
+        jumpAnimation.drawAnimation(this, frameDuration, false); // Start forward animation for jump
+
+        const startTime = performance.now();
+        let elapsedTime;
+
+        // Smooth parabolic motion
+        do {
+            elapsedTime = performance.now() - startTime;
+            const progress = elapsedTime / jumpDuration;
+
+            // Parabolic easing: -4 * x * (x - 1)
+            const parabolicFactor = -4 * progress * (progress - 1);
+            this.y = groundLevel - peakHeight * parabolicFactor;
+
             await new Promise((resolve) => requestAnimationFrame(resolve));
-        }
+        } while (elapsedTime < jumpDuration);
 
-        // Reverse animation during falling phase
         jumpAnimation.stopAnimation(this); // Stop jump animation
-        jumpAnimation.drawAnimation(this, 20, true); // Reverse animation for fall
-        while (this.y < height - this.env.platformHeight - this.playerData.height) {
-            this.y += this.verticalSpeed * 1.2;
-            await new Promise((resolve) => requestAnimationFrame(resolve));
-        }
-
-        // Stop animation after completing the fall
-        jumpAnimation.stopAnimation(this);
-        this.isJumping = false;
-
-        // Reset player to default state
+        this.y = groundLevel; // Ensure player lands at ground level
         this.resetPlayerData();
+        this.isJumping = false;
     }
 
 
