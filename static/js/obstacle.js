@@ -1,11 +1,15 @@
 class Obstacle {
 
-    static OBSTACLE_SIZE = 48;
-    static DEFAULT_IMAGE
+    static OBSTACLE_SIZE = 100;
+    static DEFAULT_IMAGES = [];
+
+    currentImage = Obstacle.DEFAULT_IMAGES[getRandomInt(0, Obstacle.DEFAULT_IMAGES.length - 1)];
 
     x
     y
     speed
+
+    rotationAngle = 0;
 
     constructor(relativeX, relativeY, speed) {
         this.x = width - relativeX;
@@ -29,21 +33,34 @@ class Obstacle {
 
     move() {
         this.x -= this.speed;
+
+        this.rotationAngle -= 0.2;
     }
 
     draw() {
 
+        // Rotate on its own axis
+        //push();
+
+        //translate(this.x + Obstacle.OBSTACLE_SIZE / 2, this.y + Obstacle.OBSTACLE_SIZE / 2);
+        //rotate(this.rotationAngle);
+
         image(
-            Obstacle.DEFAULT_IMAGE,
+            this.currentImage,
+            //-Obstacle.OBSTACLE_SIZE / 2,
+            //-Obstacle.OBSTACLE_SIZE / 2,
             this.x,
             this.y,
             Obstacle.OBSTACLE_SIZE,
             Obstacle.OBSTACLE_SIZE
         );
+
+        //pop();
     }
 
     static preload() {
-        Obstacle.DEFAULT_IMAGE = loadImage('static/assets/ball_of_wool.png');
+        Obstacle.DEFAULT_IMAGES.push(loadImage('static/assets/ball_of_wool.png'));
+        Obstacle.DEFAULT_IMAGES.push(loadImage('static/assets/wooden_box.png'));
     }
 
 }
@@ -66,7 +83,8 @@ class ObstaclePile {
             if (obstacle.isOutside()) {
                 this.obstacles.splice(this.obstacles.indexOf(obstacle), 1);
 
-                points += 1;
+                score += 1;
+                playPointSound();
                 continue;
             }
 

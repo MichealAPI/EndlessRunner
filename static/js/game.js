@@ -1,10 +1,9 @@
-
-let pressedKeys = [];
 let obstaclePiles = [];
-let points = 0;
+let score = 0;
 
 let player;
 let environment;
+let pileInterval;
 
 function drawPiles() {
     for (let pile of obstaclePiles) {
@@ -12,13 +11,21 @@ function drawPiles() {
     }
 }
 
+
 function generatePiles(rate, baseSpeed, min = 1, max = 3) {
-    return setInterval(() => {
+    function createPiles() {
         let amount = getRandomInt(min, max);
         let pile = new ObstaclePile();
-        pile.generate(amount, baseSpeed + points * 0.5);
+        pile.generate(amount, baseSpeed + score * 0.5);
         obstaclePiles.push(pile);
-    }, rate);
+
+        rate += score * 0.5;
+        clearInterval(pileInterval);
+        pileInterval = setInterval(createPiles, rate);
+    }
+
+    createPiles();
+    pileInterval = setInterval(createPiles, rate);
 }
 
 function destroyPiles() {
@@ -27,8 +34,12 @@ function destroyPiles() {
 
 function lose() {
     destroyPiles()
+    playLostSound();
+    player.setOnPlatform();
 
-    points = 0;
+    player.highScore = Math.max(player.highScore, score);
+
+    score = 0;
 }
 
 function gamePreload() {
@@ -39,13 +50,10 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// p5.js windowResized function
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
-
-    player.setOnPlatform();
-    destroyPiles();
-
-    points = 0;
+    lose()
 }
 
 // p5.js preload function
@@ -79,31 +87,82 @@ function setup() {
 
 // p5.js draw function
 function draw() {
+    // Draw the environment
+    drawEnvironment();
 
-    environment.drawBackground()
+    // Display the score and instructions
+    displayScoreAndInstructions();
+
+    // Display the controls
+    displayControls();
+
+    // Draw player and piles
+    player.draw();
+    drawPiles();
+}
+
+// Helper function to draw the environment
+function drawEnvironment() {
+    environment.drawBackground();
     environment.drawPlatform();
+}
 
-    push()
-    fill(105, 78, 42)
-
+// Helper function to display the score and instructions
+function displayScoreAndInstructions() {
+    push();
+    fill(105, 78, 42);
     textAlign(CENTER);
+    textFont(minecraftFont);
+
+    // Display the score
     textSize(width / 8);
-    textFont(minecraftFont)
-    text(points, width / 2, height / 2)
+    text(score, width / 2, height / 2);
 
-    if (!player.moved) {
-        textSize(width / 54);
-        // text("Highscore: " + highscore, width / 2, height / 2 + 100)
-        text("How to play:", width / 2, height * 0.6)
-        text("Jump: Space", width / 2, height * 0.64)
-        text("A - D: Back, Forward", width / 2, height * 0.68)
-        //text("Pause: P", width / 2, height / 2 + 250)
+    // Display instructions based on the score
+    textSize(width / 54);
+    if (score <= 0) {
+        text("How to play:", width / 2, height * 0.6);
+        text("Jump over the obstacles by pressing the spacebar", width / 2, height * 0.64);
+        text("Highscore: " + player.highScore, width / 2, height * 0.7);
+    } else {
+        text("Highscore: " + player.highScore, width / 2, height * 0.6);
     }
+    pop();
+}
 
-    pop()
+// Helper function to display the controls
+function displayControls() {
+    push();
+    textAlign(LEFT);
+    textFont(minecraftFont);
+    textSize(width / 54);
+    fill(177, 132, 23);
 
-    player.draw()
+    // Display control instructions
+    const controls = [
+        { text: "Jump: Space", y: 0.1 },
+        { text: "Move Back: Key [A]", y: 0.15 },
+        { text: "Move Forward: Key [D]", y: 0.2 },
+        { text: "Pause: Key [P]", y: 0.25 },
+        { text: "Toggle Mute: Key [M]", y: 0.3 }
+    ];
 
-    drawPiles()
+    controls.forEach(control => {
+        text(control.text, 100, height * control.y);
+    });
+    pop();
+}
 
+
+
+function togglePause() {
+    this.paused = !this.paused;
+    toggleSound()
+
+    if(this.paused) {
+        noLoop();
+    } else {
+        console.log("Resuming game")
+        loop();
+    }
 }

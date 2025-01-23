@@ -8,10 +8,8 @@ class Player {
     x
     y
     horizontalSpeed = 5 // in pixels
-    //verticalSpeed = 5 // in pixels
-    maxJumpHeight = 250 // in pixels
-
-    env
+    maxJumpHeight = 400 // in pixels
+    
     size
 
     isJumping = false
@@ -25,26 +23,29 @@ class Player {
     playerData
     moved = false
 
-    init(env) {
+    highScore = 0
+    
+    init() {
 
         this.keyMap.set('KeyD', 'moveRight');
         this.keyMap.set('KeyA', 'moveLeft');
         this.keyMap.set('Space', 'jump');
+        this.keyMap.set('KeyP', 'pause');
+        this.keyMap.set('KeyM', 'mute');
 
         this.x = 0;
         this.y = 0;
-        this.env = env;
 
         this.registerListeners();
 
         this.resetPlayerData()
-        this.y = height - this.env.platformHeight - this.playerData.height;
+        this.y = height - environment.platformHeight - this.playerData.height;
 
     }
 
     setOnPlatform() {
         this.x = 0;
-        this.y = height - this.env.platformHeight - this.playerData.height;
+        this.y = height - environment.platformHeight - this.playerData.height;
     }
 
     static preload() {
@@ -136,13 +137,15 @@ class Player {
 
     async moveJump() {
         if (this.isJumping) return;
+        playJumpSound();
+
         this.isJumping = true;
 
         const jumpAnimation = Player.ANIMATIONS.get('jump');
         const jumpDuration = 800; // Total jump duration in ms
         const frameDuration = 20; // Frame duration in ms
         const peakHeight = this.maxJumpHeight;
-        const groundLevel = height - this.env.platformHeight - this.playerData.height;
+        const groundLevel = height - environment.platformHeight - this.playerData.height;
 
         jumpAnimation.drawAnimation(this, frameDuration, false); // Start forward animation for jump
 
@@ -181,6 +184,8 @@ class Player {
 
             this[action] = true;
             if (action === 'jump' && !this.isJumping) this.moveJump();
+            if (action === 'pause') togglePause();
+            if (action === 'mute') toggleSound();
         }
     }
 
@@ -191,5 +196,8 @@ class Player {
             if (action === 'moveLeft' || action === 'moveRight') this.resetPlayerData();
         }
     }
+
+
+
 
 }
