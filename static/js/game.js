@@ -5,6 +5,8 @@ let player;
 let environment;
 let pileInterval;
 
+let blackHole;
+
 function drawPiles() {
     for (let pile of obstaclePiles) {
         pile.draw();
@@ -35,6 +37,8 @@ function destroyPiles() {
 function lose() {
     destroyPiles()
     playLostSound();
+    player.freeze = false;
+    player.opacity = 255;
     player.setOnPlatform();
 
     player.highScore = Math.max(player.highScore, score);
@@ -69,6 +73,8 @@ function setup() {
     // screen-sized
 
     createCanvas(windowWidth, windowHeight);
+    collideDebug(true);
+
 
     angleMode(DEGREES);
     frameRate(60)
@@ -77,16 +83,24 @@ function setup() {
 
     //registerListeners();
 
+    blackHole = new BlackHole();
+
+    blackHole.preload();
+
     player = new Player();
     player.init(environment)
 
     generatePiles(4000 + (Math.random() * 500), 5)
+
+    console.log(environment.platformHeight)
 
 }
 
 
 // p5.js draw function
 function draw() {
+
+
     // Draw the environment
     drawEnvironment();
 
@@ -96,10 +110,16 @@ function draw() {
     // Display the controls
     displayControls();
 
+    blackHole.draw();
+
     // Draw player and piles
     player.draw();
+
+
     drawPiles();
+
 }
+
 
 // Helper function to draw the environment
 function drawEnvironment() {

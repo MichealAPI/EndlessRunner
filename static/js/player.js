@@ -5,8 +5,8 @@ class Player {
 
     keyMap = new Map();
 
-    x
-    y
+    x = 0
+    y = 0
     horizontalSpeed = 5 // in pixels
     maxJumpHeight = 400 // in pixels
     
@@ -23,6 +23,10 @@ class Player {
     playerData
     moved = false
 
+    freeze = false
+
+    opacity = 255
+
     highScore = 0
     
     init() {
@@ -33,18 +37,16 @@ class Player {
         this.keyMap.set('KeyP', 'pause');
         this.keyMap.set('KeyM', 'mute');
 
-        this.x = 0;
-        this.y = 0;
-
         this.registerListeners();
 
         this.resetPlayerData()
-        this.y = height - environment.platformHeight - this.playerData.height;
+
+        this.setOnPlatform()
 
     }
 
     setOnPlatform() {
-        this.x = 0;
+        this.x = blackHole.x + blackHole.blackHoleSize + 50;
         this.y = height - environment.platformHeight - this.playerData.height;
     }
 
@@ -65,7 +67,7 @@ class Player {
                 'jump/jumping-cat8.png',
                 'jump/jumping-cat9.png',
                 'jump/jumping-cat10.png',
-            ], this)
+            ])
         );
 
         Player.ANIMATIONS.set(
@@ -73,7 +75,7 @@ class Player {
             new Animation([
                 'run/running-cat1.png',
                 'run/running-cat2.png',
-            ], this)
+            ])
         )
 
     }
@@ -88,40 +90,44 @@ class Player {
 
     draw() {
 
-        if (this.moveLeft) {
+        // Black hole dragging effect
+        player.x -= .2;
+
+        // Horizontal movement logic
+        if (this.moveLeft && !this.freeze) {
             this.x = Math.max(0, this.x - this.horizontalSpeed);
-
-            // rotate towards the left
-            this.mirrorModifier = -1;
+            this.mirrorModifier = -1; // Face left
         }
 
-        if (this.moveRight) {
-            this.x = Math.max(0, this.x + this.horizontalSpeed);
-            this.mirrorModifier = 1;
+        if (this.moveRight && !this.freeze) {
+            this.x = Math.min(width - this.playerData.width, this.x + this.horizontalSpeed);
+            this.mirrorModifier = 1; // Face right
         }
 
-        if (this.moveRight || this.moveLeft) {
+        // Update animation
+        if ((this.moveRight || this.moveLeft) && !this.isJumping && !this.freeze) {
+            this.steps += 0.5;
 
-            if (!this.isJumping) {
-                this.steps += .5;
+            if (this.steps < 5) {
+                this.setPlayerData(Player.ANIMATIONS.get('run').frames[0]);
+            } else {
+                this.setPlayerData(Player.ANIMATIONS.get('run').frames[1]);
+            }
 
-                if (this.steps < 5) {
-                    this.setPlayerData(Player.ANIMATIONS.get('run').frames[0]);
-                } else {
-                    this.setPlayerData(Player.ANIMATIONS.get('run').frames[1]);
-                }
-
-                if (this.steps >= 10) {
-                    this.steps = 0;
-                }
+            if (this.steps >= 10) {
+                this.steps = 0;
             }
         }
 
-        if(this.mirrorModifier === -1) {
-            push();
-            scale(-1, 1); // If user is moving left, mirror the image
+        push();
+        // Mirror the image if moving left
+        if (this.mirrorModifier === -1) {
+            scale(-1, 1); // Mirror horizontally
         }
 
+        tint(255, this.opacity);
+
+        // Draw the player
         image(
             this.playerData,
             this.mirrorModifier === -1 ? -this.x - this.playerData.width : this.x,
@@ -130,10 +136,28 @@ class Player {
             this.playerData.height
         );
 
-        if(this.mirrorModifier === -1) {
-            pop();
+        pop();
+
+        // Check for collision with black hole
+        if (blackHole.hasCollided(this.x, this.y)) {
+
+            this.freeze = true;
+
+            this.opacity -= 4;
+            player.y -= 2;
+            player.x -= 2;
+
+            // Check if player is in the middle of the black hole
+            if (player.y >= blackHole.y + blackHole.blackHoleSize / 2 && player.x >= blackHole.x && player.x <= blackHole.x + (blackHole.blackHoleSize / 2)) {
+                lose();
+            }
+
         }
     }
+
+
+
+
 
     async moveJump() {
         if (this.isJumping) return;
@@ -141,13 +165,10 @@ class Player {
 
         this.isJumping = true;
 
-        const jumpAnimation = Player.ANIMATIONS.get('jump');
         const jumpDuration = 800; // Total jump duration in ms
         const frameDuration = 20; // Frame duration in ms
         const peakHeight = this.maxJumpHeight;
         const groundLevel = height - environment.platformHeight - this.playerData.height;
-
-        jumpAnimation.drawAnimation(this, frameDuration, false); // Start forward animation for jump
 
         const startTime = performance.now();
         let elapsedTime;
@@ -157,18 +178,23 @@ class Player {
             elapsedTime = performance.now() - startTime;
             const progress = elapsedTime / jumpDuration;
 
+            if (!this.isJumping) break; // Stop if landing on a platform
+
             // Parabolic easing: -4 * x * (x - 1)
             const parabolicFactor = -4 * progress * (progress - 1);
-            this.y = groundLevel - peakHeight * parabolicFactor;
+            this.y = Math.min(
+                groundLevel,
+                groundLevel - peakHeight * parabolicFactor
+            );
 
             await new Promise((resolve) => requestAnimationFrame(resolve));
         } while (elapsedTime < jumpDuration);
 
-        jumpAnimation.stopAnimation(this); // Stop jump animation
-        this.y = groundLevel; // Ensure player lands at ground level
-        this.resetPlayerData();
         this.isJumping = false;
+        this.resetPlayerData(); // Reset to default state
     }
+
+
 
 
 

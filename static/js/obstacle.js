@@ -15,14 +15,16 @@ class Obstacle {
         this.x = width - relativeX;
         this.y = height - environment.platformHeight - relativeY - Obstacle.OBSTACLE_SIZE;
         this.speed = speed
+
+        this.size = Obstacle.OBSTACLE_SIZE;
+        this.opacity = 255;
     }
 
     hasCollided() {
         return this.x < player.x + player.playerData.width &&
-            this.x + Obstacle.OBSTACLE_SIZE > player.x &&
+            this.x + this.size > player.x &&
             this.y < player.y + player.playerData.width &&
-            this.y + Obstacle.OBSTACLE_SIZE > player.y;
-
+            this.y + this.size > player.y;
     }
 
     isOutside() {
@@ -45,17 +47,20 @@ class Obstacle {
         //translate(this.x + Obstacle.OBSTACLE_SIZE / 2, this.y + Obstacle.OBSTACLE_SIZE / 2);
         //rotate(this.rotationAngle);
 
+        push()
+
+        // Opacity
+        tint(255, this.opacity);
+
         image(
             this.currentImage,
-            //-Obstacle.OBSTACLE_SIZE / 2,
-            //-Obstacle.OBSTACLE_SIZE / 2,
             this.x,
             this.y,
-            Obstacle.OBSTACLE_SIZE,
-            Obstacle.OBSTACLE_SIZE
+            this.size,
+            this.size
         );
 
-        //pop();
+        pop();
     }
 
     static preload() {
@@ -80,20 +85,35 @@ class ObstaclePile {
 
         for (let obstacle of this.obstacles) {
 
-            if (obstacle.isOutside()) {
-                this.obstacles.splice(this.obstacles.indexOf(obstacle), 1);
+            if (blackHole.hasCollided(obstacle.x, obstacle.y)) {
 
-                score += 1;
-                playPointSound();
-                continue;
+                obstacle.y -= .4;
+                obstacle.size -= .4;
+                obstacle.opacity -= 5;
+
+                if (obstacle.y >= blackHole.blackHoleSize / 2 && obstacle.x >= blackHole.x && obstacle.x <= blackHole.x + (blackHole.blackHoleSize / 2)) {
+                    this.obstacles.splice(this.obstacles.indexOf(obstacle), 1);
+                    score += 1;
+                    playPointSound();
+
+                    continue;
+                }
+
             }
 
             if (obstacle.hasCollided()) {
+                const playerBottom = player.y + player.playerData.height;
+                const playerRight = player.x + player.playerData.width;
 
-                lose();
+                const leftCollision =
+                    playerRight > obstacle.x &&
+                    player.x < obstacle.x + obstacle.size * 0.2 &&
+                    playerBottom > obstacle.y;
 
-                break;
-
+                if (leftCollision) {
+                    // Prevent overlap and push the player back
+                    player.x = obstacle.x - player.playerData.width;
+                }
             }
 
             obstacle.move()
@@ -121,5 +141,6 @@ class ObstaclePile {
     clearObstacles() {
         this.obstacles = [];
     }
+
 
 }
