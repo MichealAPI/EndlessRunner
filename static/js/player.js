@@ -165,10 +165,13 @@ class Player {
 
         this.isJumping = true;
 
+        const jumpAnimation = Player.ANIMATIONS.get('jump');
         const jumpDuration = 800; // Total jump duration in ms
         const frameDuration = 20; // Frame duration in ms
         const peakHeight = this.maxJumpHeight;
         const groundLevel = height - environment.platformHeight - this.playerData.height;
+
+        jumpAnimation.drawAnimation(this, frameDuration, false); // Start forward animation for jump
 
         const startTime = performance.now();
         let elapsedTime;
