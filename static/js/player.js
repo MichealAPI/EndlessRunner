@@ -183,6 +183,11 @@ class Player {
 
             if (!this.isJumping) break; // Stop if landing on a platform
 
+            if (elapsedTime >= jumpDuration * .7) {
+                jumpAnimation.stopAnimation(player);
+                jumpAnimation.drawAnimation(this, frameDuration, true); // Start reverse animation
+            }
+
             // Parabolic easing: -4 * x * (x - 1)
             const parabolicFactor = -4 * progress * (progress - 1);
             this.y = Math.min(
