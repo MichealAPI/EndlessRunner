@@ -27,6 +27,8 @@ class Player {
 
     opacity = 255
 
+    onPlatform = false
+
     highScore = 0
     
     init() {
@@ -89,6 +91,11 @@ class Player {
     }
 
     draw() {
+
+        // Check if player is on ground
+        if (this.y === height - environment.platformHeight - this.playerData.height) {
+            this.onPlatform = false;
+        }
 
         // Black hole dragging effect
         player.x -= .2;
@@ -169,7 +176,12 @@ class Player {
         const jumpDuration = 800; // Total jump duration in ms
         const frameDuration = 20; // Frame duration in ms
         const peakHeight = this.maxJumpHeight;
-        const groundLevel = height - environment.platformHeight - this.playerData.height;
+        let groundLevel = player.y;
+        let landingLevel = groundLevel - peakHeight;
+
+        if (player.onPlatform) { // todo fix here
+            landingLevel = height - environment.platformHeight;
+        }
 
         jumpAnimation.drawAnimation(this, frameDuration, false); // Start forward animation for jump
 
@@ -178,10 +190,10 @@ class Player {
 
         // Smooth parabolic motion
         do {
+            if (!this.isJumping) break; // Stop if landing on a platform
+
             elapsedTime = performance.now() - startTime;
             const progress = elapsedTime / jumpDuration;
-
-            if (!this.isJumping) break; // Stop if landing on a platform
 
             if (elapsedTime >= jumpDuration * .7) {
                 jumpAnimation.stopAnimation(player);
@@ -192,7 +204,7 @@ class Player {
             const parabolicFactor = -4 * progress * (progress - 1);
             this.y = Math.min(
                 groundLevel,
-                groundLevel - peakHeight * parabolicFactor
+                landingLevel * parabolicFactor
             );
 
             await new Promise((resolve) => requestAnimationFrame(resolve));

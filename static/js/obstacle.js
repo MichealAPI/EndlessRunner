@@ -74,10 +74,26 @@ class Obstacle {
 class ObstaclePile {
 
     obstacles = []
+    pileHeight = 0
 
     generate(obstaclesAmount = 1, linearSpeed = 1) {
         for (let i = 0; i < obstaclesAmount; i++) {
             this.createObstacle(linearSpeed);
+        }
+    }
+
+    checkTopCollision() {
+
+        for (let obstacle of this.obstacles) {
+
+             let val = playerBottom > obstacle.y &&
+                player.y < obstacle.y + obstacle.size * 0.3 &&
+                player.x >= obstacle.x &&
+                player.x <= obstacle.x + obstacle.size;
+
+             if (val) {
+                 return true;
+             }
         }
     }
 
@@ -105,12 +121,40 @@ class ObstaclePile {
                 const playerBottom = player.y + player.playerData.height;
                 const playerRight = player.x + player.playerData.width;
 
-                const leftCollision =
-                    playerRight > obstacle.x &&
-                    player.x < obstacle.x + obstacle.size * 0.2 &&
-                    playerBottom > obstacle.y;
+                const topCollision =
+                    playerBottom > obstacle.y &&
+                    player.y < obstacle.y + obstacle.size * 0.3 &&
+                    player.x >= obstacle.x &&
+                    player.x <= obstacle.x + obstacle.size;
 
-                if (leftCollision) {
+                const leftCollision =
+                    playerRight >= obstacle.x - obstacle.size * 0.2 + (obstacle.speed * 0.1) &&
+                    playerRight <= obstacle.x + obstacle.size &&
+                    playerBottom > obstacle.y &&
+                    player.y < obstacle.y + obstacle.size / 2;
+
+                // Draw collision rectangles
+
+                fill(255, 0, 0, 100);
+                rect(player.x, player.y, player.playerData.width, player.playerData.height);
+                rect (obstacle.x, obstacle.y, obstacle.size, obstacle.size);
+
+                // left side collision area
+                fill(0, 255, 0, 100);
+                rect(obstacle.x, obstacle.y, -obstacle.size * 0.1, obstacle.size);
+
+                if (topCollision && !leftCollision) {
+                    // Prevent overlap and push the player back
+                    player.y = obstacle.y - obstacle.size + 2;
+                    player.x -= obstacle.speed;
+
+                    console.log("COLLIDED TOP")
+
+                    player.onPlatform = true;
+
+                    player.isJumping = false;
+
+                } else if (leftCollision) {
                     // Prevent overlap and push the player back
                     player.x = obstacle.x - player.playerData.width;
                 }
@@ -136,11 +180,12 @@ class ObstaclePile {
         let x = Obstacle.OBSTACLE_SIZE;
 
         this.addObstacle(new Obstacle(x, y, speed));
+
+        this.pileHeight += Obstacle.OBSTACLE_SIZE;
     }
 
     clearObstacles() {
         this.obstacles = [];
     }
-
 
 }
