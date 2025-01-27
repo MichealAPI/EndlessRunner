@@ -133,6 +133,10 @@ class ObstaclePile {
                     playerBottom > obstacle.y &&
                     player.y < obstacle.y + obstacle.size / 2;
 
+                // Draw top collision
+                fill(0, 0, 255, 100);
+
+
                 // Draw collision rectangles
 
                 fill(255, 0, 0, 100);
@@ -154,7 +158,11 @@ class ObstaclePile {
 
                     player.isJumping = false;
 
-                } else if (leftCollision) {
+                } else {
+                    player.onPlatform = false;
+                }
+
+                if (leftCollision) {
                     // Prevent overlap and push the player back
                     player.x = obstacle.x - player.playerData.width;
                 }

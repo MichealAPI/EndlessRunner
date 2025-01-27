@@ -171,49 +171,41 @@ class Player {
         playJumpSound();
 
         this.isJumping = true;
+        this.onPlatform = false; // Reset platform status when jumping
 
         const jumpAnimation = Player.ANIMATIONS.get('jump');
-        const jumpDuration = 800; // Total jump duration in ms
-        const frameDuration = 20; // Frame duration in ms
+        const jumpDuration = 800;
         const peakHeight = this.maxJumpHeight;
-        let groundLevel = player.y;
-        let landingLevel = groundLevel - peakHeight;
+        const groundLevel = this.y; // Initial position
+        const landingLevel = height - environment.platformHeight - this.playerData.height; // Always target base ground
 
-        if (player.onPlatform) { // todo fix here
-            landingLevel = height - environment.platformHeight;
-        }
-
-        jumpAnimation.drawAnimation(this, frameDuration, false); // Start forward animation for jump
+        jumpAnimation.drawAnimation(this, 20, false);
 
         const startTime = performance.now();
         let elapsedTime;
 
-        // Smooth parabolic motion
         do {
-            if (!this.isJumping) break; // Stop if landing on a platform
-
             elapsedTime = performance.now() - startTime;
-            const progress = elapsedTime / jumpDuration;
+            const progress = Math.min(elapsedTime / jumpDuration, 1);
 
-            if (elapsedTime >= jumpDuration * .7) {
-                jumpAnimation.stopAnimation(player);
-                jumpAnimation.drawAnimation(this, frameDuration, true); // Start reverse animation
+            // Calculate vertical position
+            const yOffset = Math.sin(progress * Math.PI); // Smoother sine-based trajectory
+            this.y = groundLevel - (peakHeight * yOffset);
+
+            // Linear interpolation to landing level
+            if (progress > 0.5) {
+                const landProgress = (progress - 0.5) * 2;
+                this.y += (landingLevel - groundLevel) * landProgress;
             }
 
-            // Parabolic easing: -4 * x * (x - 1)
-            const parabolicFactor = -4 * progress * (progress - 1);
-            this.y = Math.min(
-                groundLevel,
-                landingLevel * parabolicFactor
-            );
-
-            await new Promise((resolve) => requestAnimationFrame(resolve));
+            await new Promise(resolve => requestAnimationFrame(resolve));
         } while (elapsedTime < jumpDuration);
 
+        // Snap to final position
+        this.y = landingLevel;
         this.isJumping = false;
-        this.resetPlayerData(); // Reset to default state
+        this.resetPlayerData();
     }
-
 
 
 
