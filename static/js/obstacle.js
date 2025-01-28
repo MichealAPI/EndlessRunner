@@ -9,8 +9,6 @@ class Obstacle {
     y
     speed
 
-    rotationAngle = 0;
-
     constructor(relativeX, relativeY, speed) {
         this.x = width - relativeX;
         this.y = height - environment.platformHeight - relativeY - Obstacle.OBSTACLE_SIZE;
@@ -27,25 +25,11 @@ class Obstacle {
             this.y + this.size > player.y;
     }
 
-    isOutside() {
-
-        return this.x < 0 || this.x > width || this.y < 0 || this.y > height;
-
-    }
-
     move() {
         this.x -= this.speed;
-
-        this.rotationAngle -= 0.2;
     }
 
     draw() {
-
-        // Rotate on its own axis
-        //push();
-
-        //translate(this.x + Obstacle.OBSTACLE_SIZE / 2, this.y + Obstacle.OBSTACLE_SIZE / 2);
-        //rotate(this.rotationAngle);
 
         push()
 
@@ -82,21 +66,6 @@ class ObstaclePile {
         }
     }
 
-    checkTopCollision() {
-
-        for (let obstacle of this.obstacles) {
-
-             let val = playerBottom > obstacle.y &&
-                player.y < obstacle.y + obstacle.size * 0.3 &&
-                player.x >= obstacle.x &&
-                player.x <= obstacle.x + obstacle.size;
-
-             if (val) {
-                 return true;
-             }
-        }
-    }
-
     draw() {
 
         for (let obstacle of this.obstacles) {
@@ -114,59 +83,23 @@ class ObstaclePile {
 
                     continue;
                 }
+            }
+
+            // Predict collision
+            let predictionResult = this.predictCollision();
+
+            if (predictionResult) {
+
+                const topObstacle = this.obstacles.reduce((top, obs) => obs.y < top.y ? obs : top, this.obstacles[0]);
+
+                if (predictionResult === "left") {
+                    player.x -= topObstacle.speed;
+                } else if (predictionResult === "top") {
+                    player.y = topObstacle.y - topObstacle.size;
+                }
 
             }
 
-            if (obstacle.hasCollided()) {
-                const playerBottom = player.y + player.playerData.height;
-                const playerRight = player.x + player.playerData.width;
-
-                const topCollision =
-                    playerBottom > obstacle.y &&
-                    player.y < obstacle.y + obstacle.size * 0.3 &&
-                    player.x >= obstacle.x &&
-                    player.x <= obstacle.x + obstacle.size;
-
-                const leftCollision =
-                    playerRight >= obstacle.x - obstacle.size * 0.2 + (obstacle.speed * 0.1) &&
-                    playerRight <= obstacle.x + obstacle.size &&
-                    playerBottom > obstacle.y &&
-                    player.y < obstacle.y + obstacle.size / 2;
-
-                // Draw top collision
-                fill(0, 0, 255, 100);
-
-
-                // Draw collision rectangles
-
-                fill(255, 0, 0, 100);
-                rect(player.x, player.y, player.playerData.width, player.playerData.height);
-                rect (obstacle.x, obstacle.y, obstacle.size, obstacle.size);
-
-                // left side collision area
-                fill(0, 255, 0, 100);
-                rect(obstacle.x, obstacle.y, -obstacle.size * 0.1, obstacle.size);
-
-                if (topCollision && !leftCollision) {
-                    // Prevent overlap and push the player back
-                    player.y = obstacle.y - obstacle.size + 2;
-                    player.x -= obstacle.speed;
-
-                    console.log("COLLIDED TOP")
-
-                    player.onPlatform = true;
-
-                    player.isJumping = false;
-
-                } else {
-                    player.onPlatform = false;
-                }
-
-                if (leftCollision) {
-                    // Prevent overlap and push the player back
-                    player.x = obstacle.x - player.playerData.width;
-                }
-            }
 
             obstacle.move()
 
@@ -177,8 +110,75 @@ class ObstaclePile {
 
     }
 
+    predictCollision() {
+
+        // Define left bound box
+
+        const topObstacle = this.obstacles.reduce((top, obs) => obs.y < top.y ? obs : top, this.obstacles[0]);
+
+        if (!topObstacle) return;
+
+        let pileTop = topObstacle.y - topObstacle.size;
+
+        // Define top bound box
+
+        let topObstacleX = topObstacle.x;
+        let topObstacleY = topObstacle.y;
+
+        let topBound = {
+            x: topObstacle.x,
+            y: topObstacleY - topObstacle.size,
+            width: topObstacle.size,
+            height: 20
+        }
+
+        let leftBound = {
+            x: topObstacle.x,
+            y: height - environment.platformHeight - this.pileHeight,
+            width: 25,
+            height: pileTop + topBound.height
+        }
+
+
+
+
+        // Predict player collision with left bound box
+        let leftCollision = this.predictCollisionWithBoundBox(player, leftBound);
+
+        // Predict player collision with top bound box
+        let topCollision = this.predictCollisionWithBoundBox(player, topBound);
+        this.drawDebugBoundBox(leftBound);
+        this.drawDebugBoundBox(topBound);
+
+        return leftCollision ? "left" : topCollision ? "top" : false;
+    }
+
+
+    drawDebugBoundBox(boundBox) {
+        push();
+        noFill();
+        stroke(255, 0, 0);
+        rect(boundBox.x, boundBox.y, boundBox.width, boundBox.height);
+        pop();
+    }
+
+    predictCollisionWithBoundBox(player, boundBox) {
+
+        // x, y, width, height
+        return player.x < boundBox.x + boundBox.width &&
+            player.x + player.playerData.width > boundBox.x &&
+            player.y < boundBox.y + boundBox.height &&
+            player.y + player.playerData.height > boundBox.y;
+
+    }
+
     addObstacle(obstacle) {
         this.obstacles.push(obstacle);
+
+        this.pileHeight += Obstacle.OBSTACLE_SIZE;
+
+        // sort obstacles by y position
+        this.obstacles.sort((a, b) => a.y - b.y);
     }
 
     createObstacle(speed) {
@@ -188,12 +188,6 @@ class ObstaclePile {
         let x = Obstacle.OBSTACLE_SIZE;
 
         this.addObstacle(new Obstacle(x, y, speed));
-
-        this.pileHeight += Obstacle.OBSTACLE_SIZE;
-    }
-
-    clearObstacles() {
-        this.obstacles = [];
     }
 
 }
