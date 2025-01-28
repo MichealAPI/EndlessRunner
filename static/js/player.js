@@ -164,45 +164,41 @@ class Player {
 
 
 
-
-
     async moveJump() {
         if (this.isJumping) return;
-        playJumpSound();
-
         this.isJumping = true;
-        this.onPlatform = false; // Reset platform status when jumping
+        playJumpSound();
 
         const jumpAnimation = Player.ANIMATIONS.get('jump');
         const jumpDuration = 800;
-        const peakHeight = this.maxJumpHeight;
-        const groundLevel = this.y; // Initial position
-        const landingLevel = height - environment.platformHeight - this.playerData.height; // Always target base ground
+        const startY = this.y; // Store initial Y
+        const startTime = performance.now();
 
         jumpAnimation.drawAnimation(this, 20, false);
 
-        const startTime = performance.now();
         let elapsedTime;
-
         do {
             elapsedTime = performance.now() - startTime;
             const progress = Math.min(elapsedTime / jumpDuration, 1);
 
-            // Calculate vertical position
-            const yOffset = Math.sin(progress * Math.PI); // Smoother sine-based trajectory
-            this.y = groundLevel - (peakHeight * yOffset);
+            // Sine-based jump trajectory
+            this.y = startY - Math.sin(progress * Math.PI) * this.maxJumpHeight;
 
-            // Linear interpolation to landing level
-            if (progress > 0.5) {
-                const landProgress = (progress - 0.5) * 2;
-                this.y += (landingLevel - groundLevel) * landProgress;
+            // Check for platform landing mid-jump
+            if (this.onPlatform) {
+                break; // Exit early if landing on a platform
             }
 
             await new Promise(resolve => requestAnimationFrame(resolve));
         } while (elapsedTime < jumpDuration);
 
-        // Snap to final position
-        this.y = landingLevel;
+        // Snap to platform/ground after jump
+        if (this.onPlatform) {
+            // Platform height is handled by collision detection
+        } else {
+            this.y = height - environment.platformHeight - this.playerData.height;
+        }
+
         this.isJumping = false;
         this.resetPlayerData();
     }

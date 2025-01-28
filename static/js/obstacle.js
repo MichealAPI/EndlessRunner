@@ -10,8 +10,8 @@ class Obstacle {
     speed
 
     constructor(relativeX, relativeY, speed) {
-        this.x = width - relativeX;
-        this.y = height - environment.platformHeight - relativeY - Obstacle.OBSTACLE_SIZE;
+        this.x = relativeX;
+        this.y = relativeY;
         this.speed = speed
 
         this.size = Obstacle.OBSTACLE_SIZE;
@@ -64,6 +64,9 @@ class ObstaclePile {
         for (let i = 0; i < obstaclesAmount; i++) {
             this.createObstacle(linearSpeed);
         }
+
+        // sort obstacles by y position
+        this.obstacles.sort((a, b) => a.y - b.y);
     }
 
     draw() {
@@ -90,18 +93,28 @@ class ObstaclePile {
 
             if (predictionResult) {
 
-                const topObstacle = this.obstacles.reduce((top, obs) => obs.y < top.y ? obs : top, this.obstacles[0]);
+                const topObstacle = this.obstacles[0];
 
                 if (predictionResult === "left") {
                     player.x -= topObstacle.speed;
                 } else if (predictionResult === "top") {
-                    player.y = topObstacle.y - topObstacle.size;
+
+                    player.onPlatform = true;
+
+                    // Stick to platform vertically
+                    player.y = topObstacle.y - player.playerData.height;
+
+                    // Move horizontally with the platform
+                    player.x -= topObstacle.speed;
+
                 }
 
+            } else {
+                player.onPlatform = false;
             }
 
 
-            obstacle.move()
+            obstacle.move();
 
             //obstacle.move();
             obstacle.draw();
@@ -111,42 +124,30 @@ class ObstaclePile {
     }
 
     predictCollision() {
-
-        // Define left bound box
-
-        const topObstacle = this.obstacles.reduce((top, obs) => obs.y < top.y ? obs : top, this.obstacles[0]);
+        let topObstacle = this.obstacles[0];
 
         if (!topObstacle) return;
 
-        let pileTop = topObstacle.y - topObstacle.size;
-
-        // Define top bound box
-
-        let topObstacleX = topObstacle.x;
-        let topObstacleY = topObstacle.y;
-
+        // Define the bounding boxes based on the topObstacle
         let topBound = {
             x: topObstacle.x,
-            y: topObstacleY - topObstacle.size,
+            y: topObstacle.y - 20, // Slightly above the top of the obstacle
             width: topObstacle.size,
-            height: 20
-        }
+            height: 50
+        };
 
         let leftBound = {
-            x: topObstacle.x,
+            x: topObstacle.x - 20,
             y: height - environment.platformHeight - this.pileHeight,
             width: 25,
-            height: pileTop + topBound.height
-        }
+            height: this.pileHeight
+        };
 
-
-
-
-        // Predict player collision with left bound box
+        // Predict collisions with the player
         let leftCollision = this.predictCollisionWithBoundBox(player, leftBound);
-
-        // Predict player collision with top bound box
         let topCollision = this.predictCollisionWithBoundBox(player, topBound);
+
+        // Draw debug bounding boxes
         this.drawDebugBoundBox(leftBound);
         this.drawDebugBoundBox(topBound);
 
@@ -174,18 +175,13 @@ class ObstaclePile {
 
     addObstacle(obstacle) {
         this.obstacles.push(obstacle);
-
-        this.pileHeight += Obstacle.OBSTACLE_SIZE;
-
-        // sort obstacles by y position
-        this.obstacles.sort((a, b) => a.y - b.y);
+        this.pileHeight += obstacle.size;
     }
 
     createObstacle(speed) {
-
-        let y = this.obstacles.length * Obstacle.OBSTACLE_SIZE;
-
-        let x = Obstacle.OBSTACLE_SIZE;
+        // Position the new obstacle based on pileHeight
+        let y = height - environment.platformHeight - this.pileHeight - Obstacle.OBSTACLE_SIZE;
+        let x = width - Obstacle.OBSTACLE_SIZE; // Position near the right side of the screen
 
         this.addObstacle(new Obstacle(x, y, speed));
     }
