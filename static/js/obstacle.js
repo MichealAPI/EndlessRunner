@@ -97,8 +97,6 @@ class ObstaclePile {
 
             obstacle.move();
 
-            //obstacle.move();
-
         }
 
         const topObstacle = this.obstacles[0];
@@ -117,22 +115,12 @@ class ObstaclePile {
                 // Stick to platform vertically
                 player.y = Math.round(topObstacle.y) - player.playerData.height;
 
-                console.log("Y:"+topObstacle.y)
-                console.log("Player:" +player.playerData.height)
-                console.log(topObstacle.y - player.playerData.height)
-                console.log(player.y)
-
-                console.log(topObstacle.speed)
-
-
             } else if (predictionResult === "left" && !player.onPlatform) {
                 player.x -= topObstacle.speed;
                 player.sideCollision = true;
             } else if (predictionResult === "internal") {
                 player.x = topObstacle.x - player.playerData.width;
             }
-
-            console.log(predictionResult)
 
         } else {
             player.onPlatform = false;

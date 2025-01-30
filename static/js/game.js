@@ -77,15 +77,11 @@ function setup() {
     // screen-sized
 
     createCanvas(windowWidth, windowHeight);
-    collideDebug(true);
-
 
     angleMode(DEGREES);
     frameRate(60)
 
     environment = new Environment(50);
-
-    //registerListeners();
 
     blackHole = new BlackHole();
 
@@ -93,8 +89,6 @@ function setup() {
     player.init(environment)
 
     generatePiles(4000 + (Math.random() * 500), 5)
-
-    console.log(environment.platformHeight)
 
 }
 
@@ -186,7 +180,6 @@ function togglePause() {
     if(this.paused) {
         noLoop();
     } else {
-        console.log("Resuming game")
         loop();
     }
 }
