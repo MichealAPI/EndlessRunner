@@ -225,7 +225,14 @@ class Player {
             this.moved = true;
 
             this[action] = true;
-            if (action === 'jump' && !this.isJumping) this.moveJump();
+            if (action === 'jump' && !this.isJumping) {
+                this.moveJump();
+
+                if (baseAudio.paused) {
+                    playBaseSongLoop()
+                }
+
+            }
             if (action === 'pause') togglePause();
             if (action === 'mute') toggleSound();
         }

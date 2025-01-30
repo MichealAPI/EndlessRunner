@@ -20,6 +20,7 @@ function incrementScore() {
 
     if (score === 5) {
         environment.changeAmbientColor("hell")
+        playThunder()
     }
 
 }
