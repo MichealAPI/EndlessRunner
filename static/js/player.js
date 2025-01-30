@@ -9,7 +9,8 @@ class Player {
     y = 0
     horizontalSpeed = 5 // in pixels
     maxJumpHeight = 400 // in pixels
-    
+    gravity = 0.2 // in pixels
+
     size
 
     isJumping = false
@@ -28,6 +29,7 @@ class Player {
     opacity = 255
 
     onPlatform = false
+    sideCollision = false
 
     highScore = 0
     
@@ -92,10 +94,20 @@ class Player {
 
     draw() {
 
+        // draw player x debug rectangle
+        //fill(255, 0, 0);
+        //rect(this.x, this.y + this.playerData.height, 5, 5);
+
         // Check if player is on ground
-        if (this.y === height - environment.platformHeight - this.playerData.height) {
+        if (this.y === getPlatformExactY()) {
             this.onPlatform = false;
+
+        } else if(!this.onPlatform && !player.isJumping && !this.freeze) {
+            this.y += this.gravity * 100;
         }
+
+
+
 
         // Black hole dragging effect
         player.x -= .2;
@@ -106,13 +118,14 @@ class Player {
             this.mirrorModifier = -1; // Face left
         }
 
-        if (this.moveRight && !this.freeze) {
+        if (this.moveRight && !this.freeze && !this.sideCollision) {
             this.x = Math.min(width - this.playerData.width, this.x + this.horizontalSpeed);
             this.mirrorModifier = 1; // Face right
+
         }
 
         // Update animation
-        if ((this.moveRight || this.moveLeft) && !this.isJumping && !this.freeze) {
+        if ((this.moveRight || this.moveLeft) && !player.isJumping && !this.freeze) {
             this.steps += 0.5;
 
             if (this.steps < 5) {
@@ -155,9 +168,9 @@ class Player {
             player.x -= 2;
 
             // Check if player is in the middle of the black hole
-            if (player.y >= blackHole.y + blackHole.blackHoleSize / 2 && player.x >= blackHole.x && player.x <= blackHole.x + (blackHole.blackHoleSize / 2)) {
+            setTimeout(() => {
                 lose();
-            }
+            }, 600);
 
         }
     }
@@ -170,40 +183,35 @@ class Player {
         playJumpSound();
 
         const jumpAnimation = Player.ANIMATIONS.get('jump');
-        const jumpDuration = 800;
-        const startY = this.y; // Store initial Y
         const startTime = performance.now();
+
+        let velocity = -Math.sqrt(2 * this.gravity * this.maxJumpHeight); // Initial upward velocity
+        let elapsedTime;
 
         jumpAnimation.drawAnimation(this, 20, false);
 
-        let elapsedTime;
         do {
             elapsedTime = performance.now() - startTime;
-            const progress = Math.min(elapsedTime / jumpDuration, 1);
+            const deltaTime = elapsedTime / 1000; // Convert ms to seconds
 
-            // Sine-based jump trajectory
-            this.y = startY - Math.sin(progress * Math.PI) * this.maxJumpHeight;
+            if (!this.isJumping) break;
 
-            // Check for platform landing mid-jump
-            if (this.onPlatform) {
-                break; // Exit early if landing on a platform
+            // Apply physics: velocity decreases due to gravity
+            velocity += this.gravity;
+            this.y += velocity;  // Update position
+
+            // Stop falling at the ground level or platform
+            if (this.y >= getPlatformExactY()) {
+                this.y = getPlatformExactY()
+                break;
             }
 
             await new Promise(resolve => requestAnimationFrame(resolve));
-        } while (elapsedTime < jumpDuration);
-
-        // Snap to platform/ground after jump
-        if (this.onPlatform) {
-            // Platform height is handled by collision detection
-        } else {
-            this.y = height - environment.platformHeight - this.playerData.height;
-        }
+        } while (true);
 
         this.isJumping = false;
         this.resetPlayerData();
     }
-
-
 
 
     registerListeners() {

@@ -9,10 +9,14 @@ class Obstacle {
     y
     speed
 
+    playerHeight
+
     constructor(relativeX, relativeY, speed) {
         this.x = relativeX;
         this.y = relativeY;
         this.speed = speed
+
+        this.playerHeight = Math.abs(Player.DEFAULT_STATE_IMG.height);
 
         this.size = Obstacle.OBSTACLE_SIZE;
         this.opacity = 255;
@@ -21,12 +25,14 @@ class Obstacle {
     hasCollided() {
         return this.x < player.x + player.playerData.width &&
             this.x + this.size > player.x &&
-            this.y < player.y + player.playerData.width &&
+            this.y < player.y + player.playerData.height &&
             this.y + this.size > player.y;
     }
 
     move() {
+
         this.x -= this.speed;
+
     }
 
     draw() {
@@ -60,6 +66,7 @@ class ObstaclePile {
     obstacles = []
     pileHeight = 0
 
+
     generate(obstaclesAmount = 1, linearSpeed = 1) {
         for (let i = 0; i < obstaclesAmount; i++) {
             this.createObstacle(linearSpeed);
@@ -88,37 +95,56 @@ class ObstaclePile {
                 }
             }
 
-            // Predict collision
-            let predictionResult = this.predictCollision();
-
-            if (predictionResult) {
-
-                const topObstacle = this.obstacles[0];
-
-                if (predictionResult === "left") {
-                    player.x -= topObstacle.speed;
-                } else if (predictionResult === "top") {
-
-                    player.onPlatform = true;
-
-                    // Stick to platform vertically
-                    player.y = topObstacle.y - player.playerData.height;
-
-                    // Move horizontally with the platform
-                    player.x -= topObstacle.speed;
-
-                }
-
-            } else {
-                player.onPlatform = false;
-            }
-
-
             obstacle.move();
 
             //obstacle.move();
-            obstacle.draw();
 
+        }
+
+        const topObstacle = this.obstacles[0];
+
+        // Predict collision
+        let predictionResult = this.predictCollision();
+
+        if (predictionResult) {
+
+
+            if(predictionResult === "top") {
+
+
+                this.firstTouchEvent();
+
+                // Stick to platform vertically
+                player.y = Math.round(topObstacle.y) - player.playerData.height;
+
+                console.log("Y:"+topObstacle.y)
+                console.log("Player:" +player.playerData.height)
+                console.log(topObstacle.y - player.playerData.height)
+                console.log(player.y)
+
+                console.log(topObstacle.speed)
+
+
+            } else if (predictionResult === "left" && !player.onPlatform) {
+                player.x -= topObstacle.speed;
+                player.sideCollision = true;
+            } else if (predictionResult === "internal") {
+                player.x = topObstacle.x - player.playerData.width;
+            }
+
+            console.log(predictionResult)
+
+        } else {
+            player.onPlatform = false;
+            player.sideCollision = false;
+        }
+
+        if(player.onPlatform && topObstacle) {
+            player.x -= topObstacle.speed;
+        }
+
+        for (let obstacle of this.obstacles) {
+            obstacle.draw();
         }
 
     }
@@ -131,29 +157,48 @@ class ObstaclePile {
         // Define the bounding boxes based on the topObstacle
         let topBound = {
             x: topObstacle.x,
-            y: topObstacle.y - 20, // Slightly above the top of the obstacle
+            y: topObstacle.y - 10, // Slightly above the top of the obstacle
             width: topObstacle.size,
-            height: 50
+            height: 10
         };
 
         let leftBound = {
-            x: topObstacle.x - 20,
+            x: topObstacle.x - 5,
             y: height - environment.platformHeight - this.pileHeight,
-            width: 25,
+            width: 5,
+            height: this.pileHeight
+        };
+
+        let internalBound = {
+            x: topObstacle.x + 5,
+            y: topObstacle.y,
+            width: topObstacle.size - 5,
             height: this.pileHeight
         };
 
         // Predict collisions with the player
         let leftCollision = this.predictCollisionWithBoundBox(player, leftBound);
         let topCollision = this.predictCollisionWithBoundBox(player, topBound);
+        let internalCollision = this.predictCollisionWithBoundBox(player, internalBound);
 
         // Draw debug bounding boxes
-        this.drawDebugBoundBox(leftBound);
-        this.drawDebugBoundBox(topBound);
+        //this.drawDebugBoundBox(leftBound);
+        //this.drawDebugBoundBox(topBound);
+        //this.drawDebugBoundBox(internalBound);
 
-        return leftCollision ? "left" : topCollision ? "top" : false;
+        return leftCollision ? "left" : topCollision ? "top" : internalCollision ? "internal" : false;
     }
 
+    firstTouchEvent() {
+
+        if (!player.onPlatform) {
+
+            player.isJumping = false;
+            player.onPlatform = true;
+
+        }
+
+    }
 
     drawDebugBoundBox(boundBox) {
         push();

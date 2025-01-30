@@ -21,13 +21,12 @@ function generatePiles(rate, baseSpeed, min = 1, max = 3) {
         pile.generate(amount, baseSpeed + score * 0.5);
         obstaclePiles.push(pile);
 
-        rate += score * 0.5;
-        clearInterval(pileInterval);
-        pileInterval = setInterval(createPiles, rate);
+        rate = Math.random() * 3000 + 1000
+
+        generatePiles(rate, baseSpeed, min, max);
     }
 
-    createPiles();
-    pileInterval = setInterval(createPiles, rate);
+    pileInterval = setTimeout(createPiles, rate);
 }
 
 function destroyPiles() {
@@ -64,7 +63,12 @@ function windowResized() {
 function preload() {
     Player.preload()
     Obstacle.preload()
+    BlackHole.preload()
     gamePreload()
+}
+
+function getPlatformExactY() {
+    return height - environment.platformHeight - player.playerData.height;
 }
 
 // p5.js setup function
@@ -84,8 +88,6 @@ function setup() {
     //registerListeners();
 
     blackHole = new BlackHole();
-
-    blackHole.preload();
 
     player = new Player();
     player.init(environment)
@@ -143,7 +145,9 @@ function displayScoreAndInstructions() {
     if (score <= 0) {
         text("How to play:", width / 2, height * 0.6);
         text("Jump over the obstacles by pressing the spacebar", width / 2, height * 0.64);
-        text("Highscore: " + player.highScore, width / 2, height * 0.7);
+        text ("Avoid the black hole!", width / 2, height * 0.68);
+
+        text("Highscore: " + player.highScore, width / 2, height * 0.74);
     } else {
         text("Highscore: " + player.highScore, width / 2, height * 0.6);
     }
