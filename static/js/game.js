@@ -1,3 +1,5 @@
+const baseContainer = document.getElementById("baseContainer");
+
 let obstaclePiles = [];
 let score = 0;
 
@@ -11,6 +13,15 @@ function drawPiles() {
     for (let pile of obstaclePiles) {
         pile.draw();
     }
+}
+
+function incrementScore() {
+    score += 1;
+
+    if (score === 5) {
+        environment.changeAmbientColor("hell")
+    }
+
 }
 
 
@@ -40,7 +51,11 @@ function lose() {
     player.opacity = 255;
     player.setOnPlatform();
 
+    player.resetPlayerData()
+
     player.highScore = Math.max(player.highScore, score);
+
+    environment.changeAmbientColor("default")
 
     score = 0;
 }
@@ -61,9 +76,11 @@ function windowResized() {
 
 // p5.js preload function
 function preload() {
+    Environment.preload()
     Player.preload()
     Obstacle.preload()
     BlackHole.preload()
+    DeadTree.preload()
     gamePreload()
 }
 
@@ -73,6 +90,9 @@ function getPlatformExactY() {
 
 // p5.js setup function
 function setup() {
+
+    // Hide loading texts
+    baseContainer.style.display = "none";
 
     // screen-sized
 
@@ -111,22 +131,24 @@ function draw() {
     // Draw player and piles
     player.draw();
 
-
     drawPiles();
+
+    if (environment.currentAmbiance === "hell") {
+        environment.drawVignette();
+    }
 
 }
 
 
 // Helper function to draw the environment
 function drawEnvironment() {
-    environment.drawBackground();
-    environment.drawPlatform();
+    environment.drawAmbiance();
 }
 
 // Helper function to display the score and instructions
 function displayScoreAndInstructions() {
     push();
-    fill(105, 78, 42);
+    fill(environment.textColorPrimary);
     textAlign(CENTER);
     textFont(minecraftFont);
 
@@ -141,10 +163,26 @@ function displayScoreAndInstructions() {
         text("Jump over the obstacles by pressing the spacebar", width / 2, height * 0.64);
         text ("Avoid the black hole!", width / 2, height * 0.68);
 
-        text("Highscore: " + player.highScore, width / 2, height * 0.74);
+        text(`Highscore: ${player.highScore}`, width / 2, height * 0.74);
+
+        if (score < 5) {
+            // Hell is coming text
+            textSize(width / 54);
+            text(`HELL is coming... ${score-5}`, width / 2, height * 0.8);
+        }
+
     } else {
-        text("Highscore: " + player.highScore, width / 2, height * 0.6);
+        text(`Highscore: ${player.highScore}`, width / 2, height * 0.6);
+
+        if (score < 5) {
+            // Hell is coming text
+            textSize(width / 54);
+            text(`HELL is coming... ${score-5}`, width / 2, height * 0.66);
+        }
     }
+
+
+
     pop();
 }
 
@@ -154,15 +192,15 @@ function displayControls() {
     textAlign(LEFT);
     textFont(minecraftFont);
     textSize(width / 54);
-    fill(177, 132, 23);
+    fill(environment.textColorSecondary);
 
     // Display control instructions
     const controls = [
-        { text: "Jump: Space", y: 0.1 },
-        { text: "Move Back: Key [A]", y: 0.15 },
-        { text: "Move Forward: Key [D]", y: 0.2 },
-        { text: "Pause: Key [P]", y: 0.25 },
-        { text: "Toggle Mute: Key [M]", y: 0.3 }
+        { text: "Jump: Space", y: 0.17 },
+        { text: "Move Back: Key [A]", y: 0.22 },
+        { text: "Move Forward: Key [D]", y: 0.27 },
+        { text: "Pause: Key [P]", y: 0.32 },
+        { text: "Toggle Mute: Key [M]", y: 0.37 }
     ];
 
     controls.forEach(control => {

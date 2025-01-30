@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Endless Runner</title>
 
+    <link rel="stylesheet" href="static/css/index.css">
+
     <style>
         body {
             margin: 0;
@@ -16,11 +18,55 @@
             width: 100%;
             height: 100%;
         }
+
+        .background {
+            background-color: black;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .loading {
+            text-align: center;
+        }
+
+        .loading h1 {
+            color: white;
+            font-size: 3em;
+        }
+
+        .loading p {
+            color: white;
+            font-size: 1.5em;
+
+            animation: fadeIn 5s;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
     </style>
 
 </head>
 
-<body>
+<body class="background">
+
+    <div class="container" id="baseContainer">
+
+        <div class="loading">
+
+            <h1 class="minecraft-font">Loading...</h1>
+            <p class="minecraft-font">The world is slowing burning off...</p>
+
+        </div>
+
+    </div>
 
     <script src="static/js/p5.min.js"></script>
     <script src="static/js/environment.js"></script>
@@ -30,6 +76,7 @@
     <script src="static/js/obstacle.js"></script>
     <script src="static/js/sound.js"></script>
     <script src="static/js/blackhole.js"></script>
+    <script src="static/js/deadTree.js"></script>
 
     <audio controls loop autoplay style="display: none">
         <source src="static/assets/sound/game-loop.mp3" type="audio/mpeg">

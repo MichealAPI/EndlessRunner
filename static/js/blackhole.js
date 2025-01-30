@@ -41,8 +41,8 @@ class BlackHole {
     hasCollided(x, y) {
         return x < this.x + this.blackHoleSize - this.blackHoleSize / 4 &&
             x + this.blackHoleSize - this.blackHoleSize / 4 > this.x &&
-            y < this.y + this.blackHoleSize - this.blackHoleSize / 6 &&
-            y + this.blackHoleSize - this.blackHoleSize / 6 > this.y;
+            y < this.y + this.blackHoleSize &&
+            y + this.blackHoleSize > this.y;
     }
 
 }

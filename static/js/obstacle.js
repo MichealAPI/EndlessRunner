@@ -88,7 +88,7 @@ class ObstaclePile {
 
                 if (obstacle.y >= blackHole.blackHoleSize / 2 && obstacle.x >= blackHole.x && obstacle.x <= blackHole.x + (blackHole.blackHoleSize / 2)) {
                     this.obstacles.splice(this.obstacles.indexOf(obstacle), 1);
-                    score += 1;
+                    incrementScore()
                     playPointSound();
 
                     continue;

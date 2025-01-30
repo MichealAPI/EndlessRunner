@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'Minecraft';
+    src: url('/static/assets/font/Minecraft.ttf') format('truetype');
+    font-display: swap;
+}
+
+.minecraft-font {
+    font-family: 'Minecraft', sans-serif;
+}
