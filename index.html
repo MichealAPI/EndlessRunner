@@ -8,48 +8,6 @@
     <link rel="stylesheet" href="static/css/index.css">
 
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-        }
-
-        .background {
-            background-color: black;
-        }
-
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .loading {
-            text-align: center;
-        }
-
-        .loading h1 {
-            color: white;
-            font-size: 3em;
-        }
-
-        .loading p {
-            color: white;
-            font-size: 1.5em;
-
-            animation: fadeIn 5s;
-        }
-
-        @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
 
     </style>
 
@@ -67,6 +25,9 @@
         </div>
 
     </div>
+
+
+    <div id="gameCanvas"></div>
 
     <script src="static/js/p5.min.js"></script>
     <script src="static/js/environment.js"></script>

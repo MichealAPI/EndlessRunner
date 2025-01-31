@@ -1,3 +1,4 @@
+
 const baseContainer = document.getElementById("baseContainer");
 
 let obstaclePiles = [];
@@ -6,6 +7,7 @@ let score = 0;
 let player;
 let environment;
 let pileInterval;
+let pauseImg;
 
 let blackHole;
 
@@ -82,6 +84,9 @@ function preload() {
     Obstacle.preload()
     BlackHole.preload()
     DeadTree.preload()
+
+    pauseImg = loadImage('static/assets/other/pause.png');
+
     gamePreload()
 }
 
@@ -97,7 +102,8 @@ function setup() {
 
     // screen-sized
 
-    createCanvas(windowWidth, windowHeight);
+    let canvas = createCanvas(windowWidth, windowHeight);
+    canvas.parent("gameCanvas")
 
     angleMode(DEGREES);
     frameRate(60)
@@ -117,6 +123,15 @@ function setup() {
 // p5.js draw function
 function draw() {
 
+    if (this.paused) {
+
+        let pauseX = (width / 2) - (pauseImg.width / 2)
+        let pauseY = (height / 2) - (pauseImg.height / 2)
+
+        image(pauseImg, pauseX, pauseY, 256, 256)
+
+        return;
+    }
 
     // Draw the environment
     drawEnvironment();
@@ -137,6 +152,7 @@ function draw() {
     if (environment.currentAmbiance === "hell") {
         environment.drawVignette();
     }
+
 
 }
 
@@ -213,12 +229,8 @@ function displayControls() {
 
 
 function togglePause() {
+
     this.paused = !this.paused;
     toggleSound()
 
-    if(this.paused) {
-        noLoop();
-    } else {
-        loop();
-    }
 }

@@ -9,7 +9,7 @@ class Player {
     y = 0
     horizontalSpeed = 5 // in pixels
     maxJumpHeight = 400 // in pixels
-    gravity = 0.2 // in pixels
+    gravity = .8  // in pixels
 
     size
 
